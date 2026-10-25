@@ -1,5 +1,5 @@
-const CACHE = 'video-studio-shell-v2';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './logo-mf-192.png', './logo-mf-512.png'];
+const CACHE = 'video-studio-shell-v3';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './logo-mf.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).catch(()=>{}));
   self.skipWaiting();
