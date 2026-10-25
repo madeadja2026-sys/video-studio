@@ -2,13 +2,16 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#172554"><meta name="description" content="Editor video sederhana di browser untuk menggabungkan gambar, klip, narasi, musik, dan subtitle.">
+<meta name="theme-color" content="#172554">
+<link rel="icon" type="image/png" sizes="192x192" href="./logo-mf-192.png">
+<link rel="apple-touch-icon" href="./logo-mf-192.png">
+<link rel="manifest" href="./manifest.webmanifest"><meta name="description" content="Editor video sederhana di browser untuk menggabungkan gambar, klip, narasi, musik, dan subtitle.">
 <title>Video Studio — Editor Video Sederhana</title>
 <style>
 :root{--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#64748b;--line:#dbe3ef;--blue:#2457d6;--navy:#172554;--soft:#eaf0ff;--good:#087f5b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 header{background:linear-gradient(120deg,#172554,#2446a8);color:#fff;padding:22px max(16px,calc((100vw - 1180px)/2))}
-header h1{font-size:clamp(24px,4vw,34px);margin:0 0 4px}header p{margin:0;color:#dbeafe}
+header h1{font-size:clamp(24px,4vw,34px);margin:0 0 4px}header p{margin:0;color:#dbeafe}.brand{display:flex;align-items:center;gap:14px}.brand img{width:78px;height:78px;object-fit:contain;background:#fff;border-radius:18px;padding:3px;box-shadow:0 4px 18px #0002}@media(max-width:480px){.brand img{width:60px;height:60px;border-radius:14px}}
 main{max-width:1180px;margin:20px auto;padding:0 14px 36px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:16px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 16px #1e3a8a08;min-width:0}
 h2{font-size:18px;margin:0 0 12px}.hint{color:var(--muted);font-size:13px}.stack{display:grid;gap:12px}.field{display:grid;gap:5px}label{font-weight:650;font-size:14px}input,select,textarea,button{font:inherit}input[type=text],input[type=number],select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:white;color:var(--ink)}input[type=file]{width:100%;border:1px dashed #a8b8d1;padding:10px;border-radius:10px;background:#f8faff}
@@ -18,7 +21,7 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 </style>
 </head>
 <body>
-<header><h1>🎬 Video Studio</h1><p>Gabungkan gambar, klip, narasi, musik, dan subtitle — langsung dari browser.</p></header>
+<header><div class="brand"><img src="./logo-mf-192.png" alt="Logo MF Video Studio"><div><h1>MF Video Studio</h1><p>Gabungkan gambar, klip, narasi, musik, dan subtitle — langsung dari browser.</p></div></div></header>
 <main>
 <section class="panel">
 <h2>1. Tambahkan gambar dan klip</h2>
