@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#172554"><meta name="description" content="Editor video sederhana di browser untuk menggabungkan gambar, klip, narasi, musik, dan subtitle.">
+<title>Video Studio — Editor Video Sederhana</title>
+<style>
+:root{--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#64748b;--line:#dbe3ef;--blue:#2457d6;--navy:#172554;--soft:#eaf0ff;--good:#087f5b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:linear-gradient(120deg,#172554,#2446a8);color:#fff;padding:22px max(16px,calc((100vw - 1180px)/2))}
+header h1{font-size:clamp(24px,4vw,34px);margin:0 0 4px}header p{margin:0;color:#dbeafe}
+main{max-width:1180px;margin:20px auto;padding:0 14px 36px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 16px #1e3a8a08;min-width:0}
+h2{font-size:18px;margin:0 0 12px}.hint{color:var(--muted);font-size:13px}.stack{display:grid;gap:12px}.field{display:grid;gap:5px}label{font-weight:650;font-size:14px}input,select,textarea,button{font:inherit}input[type=text],input[type=number],select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:white;color:var(--ink)}input[type=file]{width:100%;border:1px dashed #a8b8d1;padding:10px;border-radius:10px;background:#f8faff}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.primary{background:var(--blue);color:white}.secondary{background:var(--soft);color:#1e40af}.danger{background:#fff0f0;color:#b42318}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.asset-list{display:grid;gap:8px;margin-top:10px}.asset{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px}.thumb{height:44px;width:54px;border-radius:7px;object-fit:cover;background:#e2e8f0}.asset strong{display:block;font-size:13px;overflow-wrap:anywhere}.asset small{color:var(--muted)}.asset input{max-width:82px;padding:6px}.empty{padding:18px;text-align:center;border:1px dashed #cbd5e1;border-radius:12px;color:var(--muted)}
+.preview{width:100%;aspect-ratio:16/9;background:#0f172a;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#cbd5e1}.preview img,.preview video{width:100%;height:100%;object-fit:contain}.stat{background:#f8fafc;border:1px solid var(--line);padding:10px;border-radius:10px;font-size:13px}.status{font-size:13px;padding:10px;border-radius:10px;background:#f1f5f9;color:#334155;white-space:pre-wrap}.status.good{background:#ecfdf5;color:#065f46}.status.warn{background:#fff7ed;color:#9a3412}.full{grid-column:1/-1}.check{display:flex;align-items:center;gap:8px;font-weight:500}.check input{width:18px;height:18px}.subtitles{min-height:92px}.progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
+@media(max-width:850px){main{grid-template-columns:1fr}.full{grid-column:auto}header{padding:18px 16px}.panel{padding:14px}}
+</style>
+</head>
+<body>
+<header><h1>🎬 Video Studio</h1><p>Gabungkan gambar, klip, narasi, musik, dan subtitle — langsung dari browser.</p></header>
+<main>
+<section class="panel">
+<h2>1. Tambahkan gambar dan klip</h2>
+<div class="field"><label for="visualFiles">Pilih foto atau video (bisa lebih dari satu)</label><input id="visualFiles" type="file" accept="image/*,video/*" multiple><div class="hint">Urutan mengikuti daftar di bawah. Gunakan tombol ↑ ↓ untuk mengubah urutan.</div></div>
+<div id="assets" class="asset-list"><div class="empty">Belum ada media. Pilih gambar atau video untuk mulai.</div></div>
+<div class="row" style="margin-top:12px"><button id="clearVisuals" class="secondary" type="button">Hapus semua media</button><button id="previewBtn" class="secondary" type="button" disabled>Pratinjau media</button></div>
+<div class="preview" id="preview" style="margin-top:12px"><span>Pratinjau media akan muncul di sini</span></div>
+</section>
+<section class="panel stack">
+<div><h2>2. Pengaturan video</h2><div class="field"><label for="ratio">Format</label><select id="ratio"><option value="1280:720">Horizontal 16:9 — YouTube</option><option value="720:1280">Vertikal 9:16 — Reels / Shorts / TikTok</option><option value="1080:1080">Persegi 1:1</option></select></div></div>
+<div class="row"><div class="field"><label for="fps">Frame rate</label><select id="fps"><option>24</option><option selected>30</option><option>60</option></select></div><div class="field"><label for="quality">Kualitas</label><select id="quality"><option value="28">Ukuran kecil</option><option value="23" selected>Seimbang</option><option value="18">Tinggi</option></select></div></div>
+<div class="field"><label for="defaultDuration">Durasi setiap gambar (detik)</label><input id="defaultDuration" type="number" min="1" max="120" value="4"></div>
+<div class="field"><label for="transition">Perpindahan antaradegan</label><select id="transition"><option value="cut">Potong langsung (lebih stabil)</option></select><div class="hint">Versi awal memakai perpindahan potong langsung agar proses ekspor lebih ringan.</div></div>
+<div class="field"><label for="projectName">Nama video</label><input id="projectName" type="text" value="video-saya" maxlength="60"></div>
+</section>
+<section class="panel">
+<h2>3. Narasi dan musik</h2>
+<div class="field"><label for="narration">Pilih audio narasi (opsional)</label><input id="narration" type="file" accept="audio/*"><span class="hint" id="narrationName">Belum ada narasi.</span></div>
+<div class="field"><label for="music">Pilih musik latar (opsional)</label><input id="music" type="file" accept="audio/*"><span class="hint" id="musicName">Belum ada musik.</span></div>
+<div class="row"><div class="field"><label for="voiceVol">Volume narasi (%)</label><input id="voiceVol" type="number" min="0" max="200" value="100"></div><div class="field"><label for="musicVol">Volume musik (%)</label><input id="musicVol" type="number" min="0" max="100" value="18"></div></div>
+<div class="hint">Gunakan audio yang Anda miliki atau yang diizinkan untuk digunakan. Audio akan dipotong mengikuti panjang video.</div>
+</section>
+<section class="panel">
+<h2>4. Subtitle</h2>
+<div class="field"><label for="subtitleText">Teks subtitle (satu baris untuk setiap bagian)</label><textarea id="subtitleText" class="subtitles" placeholder="Contoh:&#10;Selamat datang di video edukasi kesehatan.&#10;Mari jaga kesehatan kita setiap hari."></textarea></div>
+<div class="field"><label for="subtitleFile">Atau unggah file subtitle .SRT</label><input id="subtitleFile" type="file" accept=".srt,text/plain"></div>
+<label class="check"><input id="burnSubs" type="checkbox" checked> Tampilkan subtitle di dalam video (jika didukung)</label>
+<div class="hint">Subtitle dari teks akan dibagi rata sepanjang video. File SRT mempertahankan waktu yang sudah ditentukan di file.</div>
+</section>
+<section class="panel full">
+<h2>5. Buat video MP4</h2>
+<div class="status warn" id="status">Siap. Tambahkan media terlebih dahulu. Proses ekspor berjalan di perangkat Anda dan bisa cukup berat untuk HP.</div>
+<div class="progress" style="margin:12px 0"><span id="progress"></span></div>
+<div class="row"><button id="exportBtn" class="primary" type="button" disabled>⚙️ Gabungkan dan ekspor MP4</button><button id="stopBtn" class="danger" type="button" disabled>Batalkan proses</button></div>
+<div id="downloadArea" style="margin-top:12px"></div>
+<details style="margin-top:14px"><summary><strong>Catatan penggunaan</strong></summary><ul class="hint"><li>Ekspor menggunakan mesin FFmpeg WebAssembly yang dimuat dari internet; koneksi internet diperlukan untuk pertama kali.</li><li>Proses video besar bisa lambat atau kehabisan memori di HP. Untuk video panjang, gunakan komputer.</li><li>File media diproses di browser; aplikasi ini tidak mengunggah media ke server milik aplikasi.</li><li>Fitur subtitle tertanam bergantung pada dukungan subtitle di mesin FFmpeg yang dimuat. Jika gagal, ekspor ulang tanpa opsi subtitle tertanam.</li><li>Versi awal belum memiliki akun, penyimpanan cloud, efek kompleks, atau generator video AI.</li></ul></details>
+</section>
+</main>
+<footer>Video Studio • Versi awal • Simpan salinan media asli Anda sebelum mengedit.</footer>
+<script type="module">
+import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
+import { fetchFile, toBlobURL } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
+
+const $=id=>document.getElementById(id);
+const ffmpeg=new FFmpeg();
+let media=[], audioNarration=null, audioMusic=null, subtitleUpload=null, busy=false, cancelRequested=false, previewUrl=null;
+const safeName=(s)=>s.replace(/[^\w.-]+/g,'_').slice(0,80)||'media';
+function setStatus(msg,type=''){ $('status').textContent=msg; $('status').className='status '+type; }
+function updateButtons(){ $('exportBtn').disabled=!media.length||busy; $('stopBtn').disabled=!busy; $('previewBtn').disabled=!media.length; }
+function renderAssets(){
+ const host=$('assets'); host.innerHTML='';
+ if(!media.length){host.innerHTML='<div class="empty">Belum ada media. Pilih gambar atau video untuk mulai.</div>';updateButtons();return;}
+ media.forEach((m,i)=>{
+  const el=document.createElement('div');el.className='asset';
+  const thumb=document.createElement(m.kind==='image'?'img':'div');thumb.className='thumb';
+  if(m.kind==='image')thumb.src=m.url;else{thumb.textContent='🎞️';thumb.style.display='grid';thumb.style.placeItems='center';thumb.style.fontSize='23px';}
+  const info=document.createElement('div');const strong=document.createElement('strong');strong.textContent=m.file.name;const small=document.createElement('small');small.textContent=m.kind==='image'?'Gambar • durasi '+m.duration+' dtk':'Klip video';
+  info.append(strong,small);
+  const controls=document.createElement('div');controls.className='row';controls.style.gap='4px';controls.style.flex='0 0 auto';
+  const up=document.createElement('button');up.textContent='↑';up.className='secondary';up.title='Geser ke atas';up.disabled=i===0;up.onclick=()=>{[media[i-1],media[i]]=[media[i],media[i-1]];renderAssets()};
+  const down=document.createElement('button');down.textContent='↓';down.className='secondary';down.title='Geser ke bawah';down.disabled=i===media.length-1;down.onclick=()=>{[media[i+1],media[i]]=[media[i],media[i+1]];renderAssets()};
+  const del=document.createElement('button');del.textContent='×';del.className='danger';del.title='Hapus media';del.onclick=()=>{URL.revokeObjectURL(m.url);media.splice(i,1);renderAssets()};
+  controls.append(up,down,del);el.append(thumb,info,controls);
+  if(m.kind==='image'){const dur=document.createElement('div');dur.className='field';dur.style.gridColumn='2 / 4';dur.innerHTML='<label>Durasi gambar (detik)</label>';const inp=document.createElement('input');inp.type='number';inp.min='1';inp.max='120';inp.value=m.duration;inp.onchange=()=>m.duration=Math.max(1,Math.min(120,Number(inp.value)||4));dur.append(inp);el.append(dur);}
+  host.append(el);
+ });updateButtons();
+}
+$('visualFiles').addEventListener('change',e=>{
+ for(const file of e.target.files){if(!file.type.startsWith('image/')&&!file.type.startsWith('video/'))continue;media.push({file,kind:file.type.startsWith('image/')?'image':'video',duration:Number($('defaultDuration').value)||4,url:URL.createObjectURL(file)});}
+ renderAssets();e.target.value='';
+});
+$('defaultDuration').addEventListener('change',()=>{const d=Math.max(1,Math.min(120,Number($('defaultDuration').value)||4));$('defaultDuration').value=d;media.forEach(m=>{if(m.kind==='image')m.duration=d});renderAssets()});
+$('clearVisuals').onclick=()=>{if(!confirm('Hapus semua gambar dan klip dari daftar?'))return;media.forEach(m=>URL.revokeObjectURL(m.url));media=[];$('preview').innerHTML='<span>Pratinjau media akan muncul di sini</span>';renderAssets()};
+$('previewBtn').onclick=()=>{if(!media.length)return;const m=media[0];$('preview').innerHTML='';const node=document.createElement(m.kind==='image'?'img':'video');node.src=m.url;if(m.kind==='video'){node.controls=true;node.playsInline=true} $('preview').append(node)};
+$('narration').onchange=e=>{audioNarration=e.target.files[0]||null;$('narrationName').textContent=audioNarration?audioNarration.name:'Belum ada narasi.'};
+$('music').onchange=e=>{audioMusic=e.target.files[0]||null;$('musicName').textContent=audioMusic?audioMusic.name:'Belum ada musik.'};
+$('subtitleFile').onchange=e=>{subtitleUpload=e.target.files[0]||null;if(subtitleUpload){$('subtitleText').value='';setStatus('File subtitle dipilih: '+subtitleUpload.name,'good')}};
+function fmtSrt(t){const ms=Math.floor((t%1)*1000),s=Math.floor(t)%60,m=Math.floor(t/60)%60,h=Math.floor(t/3600);return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`}
+function makeSrt(text,total){const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(!lines.length)return '';const span=total/lines.length;return lines.map((line,i)=>`${i+1}\n${fmtSrt(i*span)} --> ${fmtSrt((i+1)*span)}\n${line}`).join('\n\n')}
+async function loadEngine(){
+ if(ffmpeg.loaded)return;
+ setStatus('Memuat mesin pengolah video dari internet…','warn');
+ ffmpeg.on('progress',({progress})=>{$('progress').style.width=Math.max(0,Math.min(100,progress*100))+'%'});
+ ffmpeg.on('log',({message})=>{if(/error/i.test(message))console.warn(message)});
+ const base='https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
+ await ffmpeg.load({coreURL:await toBlobURL(base+'/ffmpeg-core.js','text/javascript'),wasmURL:await toBlobURL(base+'/ffmpeg-core.wasm','application/wasm')});
+}
+$('stopBtn').onclick=()=>{cancelRequested=true;try{ffmpeg.terminate()}catch{}busy=false;setStatus('Proses dibatalkan. Muat ulang halaman sebelum mencoba ekspor lagi.','warn');updateButtons()};
+$('exportBtn').onclick=async()=>{
+ if(busy||!media.length)return;busy=true;cancelRequested=false;updateButtons();$('downloadArea').innerHTML='';$('progress').style.width='0%';
+ const cleanup=[];let outputUrl=null;
+ try{
+  await loadEngine();
+  const [w,h]=$('ratio').value.split(':').map(Number),fps=Number($('fps').value)||30,crf=Number($('quality').value)||23;
+  const inputs=[],filters=[],concatLabels=[];let inputIndex=0;
+  for(let i=0;i<media.length;i++){
+   if(cancelRequested)throw new Error('Proses dibatalkan');
+   const m=media[i],ext=(m.file.name.split('.').pop()|| (m.kind==='image'?'png':'mp4')).toLowerCase().replace(/[^a-z0-9]/g,'')||'dat';
+   const name=`input_${i}.${ext}`;await ffmpeg.writeFile(name,await fetchFile(m.file));cleanup.push(name);
+   if(m.kind==='image'){
+    const d=Math.max(1,Math.min(120,Number(m.duration)||4));
+    filters.push(`[${inputIndex}:v]scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${fps},format=yuv420p,trim=duration=${d},setpts=PTS-STARTPTS[v${i}]`);
+   }else{
+    filters.push(`[${inputIndex}:v]scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${fps},format=yuv420p,setpts=PTS-STARTPTS[v${i}]`);
+   }
+   concatLabels.push(`[v${i}]`);inputIndex++;
+  }
+  const concatInput=concatLabels.join('')+`concat=n=${media.length}:v=1:a=0[vbase]`;
+  filters.push(concatInput);
+  let total=0;
+  for(const m of media){if(m.kind==='image')total+=Math.max(1,Number(m.duration)||4);else total+=Math.max(1,Number(m.file.duration)||0)}
+  // Determine actual clip duration using browser metadata when possible; FFmpeg handles the output duration.
+  let videoLabel='vbase';
+  const subtitleText=$('subtitleText').value.trim();
+  if(subtitleUpload|| (subtitleText&&$('burnSubs').checked)){
+   let srt='captions.srt';
+   if(subtitleUpload){await ffmpeg.writeFile(srt,await fetchFile(subtitleUpload))}
+   else {await ffmpeg.writeFile(srt,new TextEncoder().encode(makeSrt(subtitleText,total||10)))}
+   cleanup.push(srt);
+   if($('burnSubs').checked){
+    filters.push(`[vbase]subtitles=${srt}:force_style='FontName=Arial,FontSize=22,Outline=2,Shadow=1,Alignment=2,MarginV=35'[vsub]`);videoLabel='vsub';
+   }
+  }
+  const args=[];
+  for(let i=0;i<media.length;i++){
+   const name=cleanup.find(n=>n.startsWith(`input_${i}.`));
+   if(media[i].kind==='image')args.push('-loop','1','-t',String(Math.max(1,Number(media[i].duration)||4)),'-i',name);
+   else args.push('-i',name);
+  }
+  let narrIdx=-1,musicIdx=-1;
+  if(audioNarration){const n='narration.'+(safeName(audioNarration.name).split('.').pop()||'mp3');await ffmpeg.writeFile(n,await fetchFile(audioNarration));cleanup.push(n);narrIdx=inputIndex;args.push('-i',n);inputIndex++}
+  if(audioMusic){const n='music.'+(safeName(audioMusic.name).split('.').pop()||'mp3');await ffmpeg.writeFile(n,await fetchFile(audioMusic));cleanup.push(n);musicIdx=inputIndex;args.push('-stream_loop','-1','-i',n);inputIndex++}
+  args.push('-filter_complex',filters.join(';'));
+  if(narrIdx>=0&&musicIdx>=0){
+   const vv=Math.max(0,Math.min(2,Number($('voiceVol').value)/100||0)),mv=Math.max(0,Math.min(1,Number($('musicVol').value)/100||0));
+   args[args.length-1]+=`;[${narrIdx}:a]volume=${vv}[voice];[${musicIdx}:a]volume=${mv}[music];[voice][music]amix=inputs=2:duration=first:dropout_transition=2[aout]`;
+   args.push('-map',`[${videoLabel}]`,'-map','[aout]');
+  }else if(narrIdx>=0){const vv=Math.max(0,Math.min(2,Number($('voiceVol').value)/100||0));args[args.length-1]+= `;[${narrIdx}:a]volume=${vv}[aout]`;args.push('-map',`[${videoLabel}]`,'-map','[aout]')}
+  else if(musicIdx>=0){const mv=Math.max(0,Math.min(1,Number($('musicVol').value)/100||0));args[args.length-1]+= `;[${musicIdx}:a]volume=${mv}[aout]`;args.push('-map',`[${videoLabel}]`,'-map','[aout]')}
+  else args.push('-map',`[${videoLabel}]`,'-an');
+  const out='video-studio-output.mp4';args.push('-c:v','libx264','-preset','ultrafast','-crf',String(crf),'-pix_fmt','yuv420p','-r',String(fps),'-movflags','+faststart','-shortest',out);
+  setStatus('Sedang menggabungkan media. Jangan tutup halaman ini.','warn');
+  await ffmpeg.exec(args);
+  const data=await ffmpeg.readFile(out);const blob=new Blob([data.buffer],{type:'video/mp4'});outputUrl=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=outputUrl;a.download=(safeName($('projectName').value)||'video-saya')+'.mp4';a.textContent='⬇️ Unduh video MP4';a.className='primary';a.style.display='inline-block';a.style.textDecoration='none';a.style.padding='12px 16px';a.style.borderRadius='10px';$('downloadArea').append(a);
+  const size=(blob.size/1024/1024).toFixed(1);const vid=document.createElement('video');vid.controls=true;vid.src=outputUrl;vid.style.width='100%';vid.style.marginTop='12px';vid.style.borderRadius='12px';$('downloadArea').append(vid);
+  setStatus(`Selesai! Video MP4 berhasil dibuat (${size} MB). Tekan “Unduh video MP4” untuk menyimpan.`,'good');$('progress').style.width='100%';
+ }catch(err){console.error(err);setStatus('Ekspor belum berhasil: '+(err?.message||String(err))+'\nCoba gunakan klip yang lebih pendek, tutup aplikasi lain, atau ekspor tanpa subtitle tertanam. Jika proses dibatalkan, muat ulang halaman.','warn')}
+ finally{busy=false;updateButtons();if(!cancelRequested){for(const f of cleanup){try{await ffmpeg.deleteFile(f)}catch{}}}}
+};
+renderAssets();
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>

@@ -1,0 +1,10 @@
+{
+  "name": "Video Studio Editor",
+  "short_name": "Video Studio",
+  "description": "Editor sederhana untuk menggabungkan media menjadi video MP4",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#172554",
+  "icons": []
+}
