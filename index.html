@@ -103,20 +103,27 @@ function fmtSrt(t){const ms=Math.floor((t%1)*1000),s=Math.floor(t)%60,m=Math.flo
 function makeSrt(text,total){const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(!lines.length)return '';const span=total/lines.length;return lines.map((line,i)=>`${i+1}\n${fmtSrt(i*span)} --> ${fmtSrt((i+1)*span)}\n${line}`).join('\n\n')}
 async function loadEngine(){
  if(ffmpeg.loaded)return;
- setStatus('Mengunduh mesin ekspor video dari internet. File mesin berukuran besar; tunggu hingga selesai dan jangan tutup halaman…','warn');
+ setStatus('Menghubungkan ke CDN mesin video. Tunggu; file mesin cukup besar…','warn');
  ffmpeg.on('progress',({progress})=>{$('progress').style.width=Math.max(0,Math.min(100,progress*100))+'%'});
- ffmpeg.on('log',({message})=>{console.log('[FFmpeg]',message);if(/error/i.test(message))setStatus('Mesin video melaporkan masalah: '+message,'warn')});
- const base='https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
- const loading=(async()=>{
-   setStatus('Mengunduh komponen mesin video (1/2)…','warn');
+ ffmpeg.on('log',({message})=>{console.log('[FFmpeg]',message);if(/error/i.test(message))console.warn(message)});
+ const cdns=[
+  'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd',
+  'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd'
+ ];
+ let lastError=null, loaded=false;
+ for(let i=0;i<cdns.length;i++){
+  const base=cdns[i];
+  try{
+   setStatus('Mencoba sumber mesin video '+(i+1)+' dari '+cdns.length+'…','warn');
    const coreURL=await toBlobURL(base+'/ffmpeg-core.js','text/javascript');
-   setStatus('Mengunduh komponen mesin video (2/2). File WASM cukup besar; tunggu beberapa menit bila koneksi lambat…','warn');
+   setStatus('Sumber mesin video terhubung. Mengunduh komponen WASM yang besar…','warn');
    const wasmURL=await toBlobURL(base+'/ffmpeg-core.wasm','application/wasm');
    setStatus('Menyiapkan mesin video di browser…','warn');
    await ffmpeg.load({coreURL,wasmURL});
- })();
- const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Pemuatan mesin video belum selesai setelah 120 detik. Periksa koneksi internet atau coba muat ulang halaman (Ctrl+F5), lalu ekspor kembali.')),120000));
- await Promise.race([loading,timeout]);
+   loaded=true;break;
+  }catch(err){lastError=err;console.warn('CDN gagal:',base,err);}
+ }
+ if(!loaded)throw new Error('Browser tidak berhasil mengunduh mesin video dari dua sumber CDN. Periksa internet, VPN, atau pemblokir unduhan. Detail: '+(lastError?.message||'koneksi gagal'));
  setStatus('Mesin video siap. Sedang menyiapkan media…','good');
 }
 $('stopBtn').onclick=()=>{cancelRequested=true;try{ffmpeg.terminate()}catch{}busy=false;setStatus('Proses dibatalkan. Muat ulang halaman sebelum mencoba ekspor lagi.','warn');updateButtons()};
